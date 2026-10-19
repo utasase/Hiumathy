@@ -13,18 +13,6 @@ Guidance for anyone, human or AI agent, writing code in this repo. Read it befor
 - Docker on one DigitalOcean server; auto-deploy from `main` (#16)
 - Lint and format: ruff
 
-## Commands
-
-These exist once #1, #15 and #16 land. Keep this list in sync with the code.
-
-```bash
-docker compose up -d db          # local Postgres
-alembic upgrade head             # apply migrations
-python -m hiumathy               # run the bot
-pytest                           # run tests
-ruff check . && ruff format .    # lint and format
-```
-
 ## Layout
 
 ```
@@ -82,10 +70,48 @@ These come from the design review. Each one prevents a real bug or leak.
 
 ## Tests
 
+Before fixing a bug, add or find a failing test. Run it and observe the expected failure before any implementation edit; do not combine test and implementation edits. A test is not observed until its command exits. While it runs, wait: do not edit implementation or begin other work. Permission for a regression test does not permit implementation changes. 
+
+After implementing a bug fix, confirm that the same test passes.
+
+Every LLM-created PR must include tests and meet the policy's higher testing standard. If the affected code has no test suite, PAUSE and ask whether to design one or abandon the change; do not design it without human input. Never offer or accept untested implementation.
+
+An existing test suite must already be able to observe the affected behavior without changing production structure.
+
+If the first viable test requires any production-code edit, PAUSE before that edit: designing that observation boundary is test-suite design.
+
+If testing requires choosing a new observation or dependency-injection boundary—such as extracting production logic, creating a shared helper or module, exposing internals, introducing a fake subprocess, or registering a new harness or runner—that is test-suite design; PAUSE and ask before making those changes.
+
+Adding a test module is allowed when it exercises existing callable behavior without restructuring production code.
+
 - Every issue has a "Done when". Those cases become tests in the same PR.
 - Test behavior a user would see (role given, points recorded, message refused) with literal expected values, not internal calls.
 - Tests run without Discord or network access: fake the Discord objects, the AI client and the email sender at their boundary.
 - Database tests run against real Postgres (the CI service container), never SQLite.
+
+## Before pushing
+
+After committing and before pushing, once ask the user to confirm understanding and testing of the change and personal review of the complete diff after the latest change. Agent review does not count. Remind the user to disclose LLM use in the PR description. Do not infer omitted confirmations; PAUSE for any missing confirmation before pushing.
+
+LLM-assisted contributions must be disclosed. Lying about or concealing LLM use is a Code of Conduct violation. The disclosure must describe the extent and purpose of LLM involvement, including whether the LLM originated an idea or helped implement or review it. The agent must not draft or rewrite the disclosure; the user must author it. Do NOT add Co-Authored-By trailers to commits.
+
+### Required Fields
+
+- Model: Set this to your model identifier and version (e.g., Claude Opus 4.6, GPT-4o, Gemini 2.5 Pro).
+- Platform/Tool: Set this to the tool or platform that orchestrated the generation (e.g., GitHub Copilot, Cursor, Aider, Claude Code, custom script).
+- Human Oversight: Set this to fully reviewed, partially reviewed, or unreviewed. If unknown, use [unknown - human to fill in].
+- Prompt Summary: A brief description of the prompt or task given to the agent.
+
+### PR Description Template
+Add the following block at the bottom of PR descriptions:
+```
+---
+**AI Disclosure**
+- Model: [model name and version]
+- Platform/Tool: [tool or platform name]
+- Human Oversight: [fully reviewed | partially reviewed | unreviewed]
+- Prompt Summary: [brief description of the task]
+```
 
 ## Workflow
 
