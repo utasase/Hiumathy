@@ -1,0 +1,6 @@
+.env
+exports/
+.venv/
+__pycache__/
+
+CONTEXT.md
